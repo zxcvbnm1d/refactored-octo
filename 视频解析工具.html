@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频解析工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #ff4757;
+            --success-color: #2ed573;
+            --warning-color: #ffa502;
+            --light-bg: rgba(241, 242, 246, 0.85);
+            --dark-text: #2f3542;
+            --light-text: #ffffff;
+            --border-radius: 12px;
+            --transition-speed: 0.3s;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--dark-text);
+            line-height: 1.6;
+            position: relative;
+        }
+        
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            z-index: -1;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            margin: 0 auto;
+        }
+        
+        .tab-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* API工具样式 */
+        .api-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .panel-header {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .window-controls {
+            display: flex;
+            gap: 10px;
+            margin-right: 15px;
+        }
+        
+        .control-btn {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .close-btn {
+            background: #ff5f56;
+        }
+        
+        .minimize-btn {
+            background: #ffbd2e;
+        }
+        
+        .maximize-btn {
+            background: #27c93f;
+        }
+        
+        .address-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 28px;
+            padding: 8px 18px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        
+        .api-content {
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .api-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .api-selector label {
+            font-weight: 600;
+            color: var(--light-text);
+            font-size: 16px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .api-select {
+            padding: 12px 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+        
+        .api-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .api-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .api-input {
+            padding: 14px 18px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color var(--transition-speed);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .api-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .api-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+        }
+        
+        .api-btn:hover {
+            background: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 71, 87, 0.5);
+        }
+        
+        .result-container {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: var(--light-text);
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result-content {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-family: 'Fira Code', 'Consolas', monospace;
+            word-break: break-all;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+        
+        .copy-btn {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            align-self: flex-start;
+            box-shadow: 0 4px 10px rgba(46, 213, 115, 0.4);
+        }
+        
+        .copy-btn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(46, 213, 115, 0.5);
+        }
+        
+        /* 浏览器样式 */
+        .browser-container {
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            margin-right: 12px;
+            gap: 8px;
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #5f6368;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 6px;
+            border-radius: 50%;
+            transition: all var(--transition-speed);
+        }
+        
+        .nav-btn:hover {
+            background: #f0f0f0;
+            color: var(--primary-color);
+        }
+        
+        .url-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px 12px;
+            font-size: 16px;
+            background: transparent;
+            color: #333;
+            min-width: 0; /* 添加这个属性防止输入框溢出 */
+        }
+        
+        .go-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+            flex-shrink: 0; /* 防止按钮缩小 */
+        }
+        
+        .go-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.5);
+        }
+        
+        .browser-content {
+            flex: 1;
+            background: white;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #browserFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-indicator.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        .error-message {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #d93025;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 80%;
+        }
+        
+        .error-message.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        /* 底部导航 */
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 10px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition-speed);
+            color: var(--light-text);
+        }
+        
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        .tab-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .instructions {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            margin-top: 20px;
+            width: 100%;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .instructions h2 {
+            margin-bottom: 20px;
+            color: var(--light-text);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .instructions p {
+            margin-bottom: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.7;
+        }
+        
+        .instructions ul {
+            margin-left: 25px;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: var(--primary-color);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+        
+        .example-urls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .example-url {
+            background: rgba(255, 255, 255, 0.2);
+            color: #74b9ff;
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            border: 1px solid transparent;
+        }
+        
+        .example-url:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            border-color: #74b9ff;
+        }
+        
+        footer {
+            color: white;
+            text-align: center;
+            margin-top: 30px;
+            opacity: 0.9;
+            font-size: 14px;
+            width: 100%;
+            padding: 20px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* 响应式设计 - 修复移动端问题 */
+        @media (max-width: 768px) {
+            .panel-header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+            
+            .window-controls {
+                align-self: flex-start;
+            }
+            
+            .address-bar {
+                width: 100%;
+                padding: 8px 12px;
+                flex-wrap: nowrap; /* 防止元素换行 */
+            }
+            
+            .nav-buttons {
+                margin-right: 8px;
+                flex-shrink: 0; /* 防止导航按钮缩小 */
+            }
+            
+            .url-input {
+                padding: 8px 10px;
+                font-size: 14px;
+                min-width: 50px; /* 确保输入框有最小宽度 */
+            }
+            
+            .go-btn {
+                padding: 8px 14px;
+                font-size: 14px;
+                white-space: nowrap; /* 防止文字换行 */
+            }
+            
+            .browser-container {
+                height: 60vh;
+            }
+            
+            .api-content {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .api-select, .api-input {
+                padding: 12px 15px;
+            }
+            
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            .instructions {
+                padding: 20px;
+            }
+            
+            .example-urls {
+                gap: 10px;
+            }
+            
+            .example-url {
+                padding: 8px 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-buttons {
+                margin-right: 6px;
+            }
+            
+            .nav-btn {
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            .url-input {
+                font-size: 13px;
+                padding: 6px 8px;
+            }
+            
+            .go-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            /* 确保地址栏内元素不换行 */
+            .address-bar {
+                overflow: hidden;
+            }
+            
+            .api-btn {
+                padding: 12px;
+            }
+            
+            .result-content {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            .tab-btn {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
+            
+            .instructions ul {
+                margin-left: 20px;
+            }
+        }
+        
+        /* 针对非常小的屏幕进行额外调整 */
+        @media (max-width: 360px) {
+            .go-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            
+            .go-btn i {
+                margin-right: 0; /* 移除图标右边距 */
+            }
+            
+            .go-btn span {
+                display: none; /* 隐藏"前往"文字，只显示图标 */
+            }
+            
+            .url-input {
+                font-size: 12px;
+            }
+            
+            .nav-btn {
+                padding: 4px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    
+    <div class="app-container">
+        <!-- API工具标签页 -->
+        <div class="tab-container">
+            <div class="tab-content active" id="apiTab">
+                <div class="api-container">
+                    <div class="panel-header">
+                        <div class="window-controls">
+                            <button class="control-btn close-btn"></button>
+                            <button class="control-btn minimize-btn"></button>
+                            <button class="control-btn maximize-btn"></button>
+                        </div>
+                        <div class="address-bar">
+                            <span><i class="fas fa-code"></i> 视频解析工具</span>
+                        </div>
+                    </div>
+                    <div class="api-content">
+                        <div class="api-selector">
+                            <label for="apiSelect"><i class="fas fa-plug"></i> 选择类型:</label>
+                            <select id="apiSelect" class="api-select">
+                                <option value="douyin">抖音</option>
+                                <option value="kuaishou">快手</option>
+                            </select>
+                        </div>
+                        
+                        <div class="api-input-group">
+                            <input type="text" class="api-input" id="apiUrlInput" placeholder="请输入视频链接 (例如: https://v.douyin.com/...)" value="">
+                            <button class="api-btn" id="apiBtn"><i class="fas fa-link"></i> 解析</button>
+                        </div>
+                        
+                        <div class="result-container">
+                            <div class="result-title"><i class="fas fa-paperclip"></i> 解析后的网址:</div>
+                            <div class="result-content" id="resultContent"></div>
+                            <button class="copy-btn" id="copyBtn">
+                                <i class="fas fa-copy"></i> 复制网址
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 浏览器标签页 -->
+            <div class="tab-content" id="browserTab">
+                <div class="browser-container">
+                    <div class="panel-header">
+                        <div class="window-controls">
+                            <button class="control-btn close-btn"></button>
+                            <button class="control-btn minimize-btn"></button>
+                            <button class="control-btn maximize-btn"></button>
+                        </div>
+                        <div class="address-bar">
+                            <div class="nav-buttons">
+                                <button class="nav-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+                                <button class="nav-btn" id="forwardBtn"><i class="fas fa-arrow-right"></i></button>
+                                <button class="nav-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                            <input type="text" class="url-input" id="urlInput" placeholder="输入网址 (例如: https://example.com)" value="https://example.com">
+                            <button class="go-btn" id="goBtn"><i class="fas fa-external-link-alt"></i> <span>前往</span></button>
+                        </div>
+                    </div>
+                    <div class="browser-content">
+                        <div class="loading-indicator" id="loadingIndicator">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>正在加载网页内容...</p>
+                        </div>
+                        <div class="error-message" id="errorMessage">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            <h3>无法加载网页</h3>
+                            <p>请检查网址是否正确，或尝试其他网址。</p>
+                        </div>
+                        <iframe id="browserFrame" src="about:blank"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="apiTab">
+                <i class="fas fa-code"></i> 解析工具
+            </button>
+            <button class="tab-btn" data-tab="browserTab">
+                <i class="fas fa-globe"></i> 浏览器
+            </button>
+        </div>
+
+        <div class="instructions">
+            <h2><i class="fas fa-info-circle"></i> 使用说明</h2>
+            <p>这是一个增强版浏览器模拟器，集成了视频解析功能：</p>
+            
+            <ul>
+                <li><strong>视频解析功能</strong>：输入视频链接，选择解析类型，点击"解析"按钮生成完整解析网址</li>
+                <li><strong>浏览器功能</strong>：可以浏览网页，支持前进、后退和刷新</li>
+                <li>生成的解析网址可以复制使用</li>
+                <li>由于浏览器安全限制，某些网站可能无法正常加载</li>
+                <li>作者：晏洛.ZH</li>
+            </ul>
+            
+           
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 增强版浏览解析器 | 用于教育和测试目的</p>
+    </footer>
+
+    <!-- 粒子效果库 -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <script>
+        // 初始化粒子背景
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: "#ffffff" },
+                    shape: {
+                        type: "circle",
+                        stroke: { width: 0, color: "#000000" },
+                        polygon: { nb_sides: 5 }
+                    },
+                    opacity: {
+                        value: 0.5,
+                        random: true,
+                        anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false }
+                    },
+                    size: {
+                        value: 3,
+                        random: true,
+                        anim: { enable: true, speed: 2, size_min: 0.1, sync: false }
+                    },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: "#ffffff",
+                        opacity: 0.4,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 1,
+                        direction: "none",
+                        random: true,
+                        straight: false,
+                        out_mode: "out",
+                        bounce: false,
+                        attract: { enable: false, rotateX: 600, rotateY: 1200 }
+                    }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: { enable: true, mode: "grab" },
+                        onclick: { enable: true, mode: "push" },
+                        resize: true
+                    },
+                    modes: {
+                        grab: { distance: 140, line_linked: { opacity: 1 } },
+                        push: { particles_nb: 4 }
+                    }
+                },
+                retina_detect: true
+            });
+            
+            // 标签页切换功能
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // 更新按钮状态
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // 更新内容显示
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // 如果是浏览器标签且尚未加载，则加载默认页面
+                    if (tabId === 'browserTab' && document.getElementById('browserFrame').src === 'about:blank') {
+                        navigateTo('https://example.com');
+                    }
+                });
+            });
+            
+            // 浏览器部分元素
+            const urlInput = document.getElementById('urlInput');
+            const goBtn = document.getElementById('goBtn');
+            const browserFrame = document.getElementById('browserFrame');
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const exampleUrls = document.querySelectorAll('.example-url');
+            
+            // API工具部分元素
+            const apiUrlInput = document.getElementById('apiUrlInput');
+            const apiBtn = document.getElementById('apiBtn');
+            const resultContent = document.getElementById('resultContent');
+            const copyBtn = document.getElementById('copyBtn');
+            const apiSelect = document.getElementById('apiSelect');
+            
+            // API基础地址
+            const API_BASE_URLS = {
+                douyin: 'https://api.suyanw.cn/api/douyin.php?url=',
+                kuaishou: 'https://api.suyanw.cn/api/kuaishou.php?url='
+            };
+            
+            // 当前选择的API
+            let currentApi = 'douyin';
+            
+            // 浏览器历史记录
+            let history = [];
+            let currentHistoryIndex = -1;
+            
+            // API选择事件
+            apiSelect.addEventListener('change', function() {
+                currentApi = this.value;
+            });
+            
+            // API拼接按钮点击事件
+            apiBtn.addEventListener('click', function() {
+                processApiUrl();
+            });
+            
+            // API输入框回车事件
+            apiUrlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    processApiUrl();
+                }
+            });
+            
+            // 复制按钮点击事件
+            copyBtn.addEventListener('click', function() {
+                const textToCopy = resultContent.textContent;
+                
+                if (!textToCopy) {
+                    alert('请先生成网址后再复制');
+                    return;
+                }
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // 更改按钮文本提示复制成功
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    alert('复制失败: ' + err);
+                });
+            });
+            
+            // 示例网址点击事件
+            exampleUrls.forEach(example => {
+                example.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    urlInput.value = url;
+                    apiUrlInput.value = url;
+                });
+            });
+            
+            // 前往按钮点击事件
+            goBtn.addEventListener('click', function() {
+                navigateTo(urlInput.value);
+            });
+            
+            // 输入框回车事件
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    navigateTo(urlInput.value);
+                }
+            });
+            
+            // 导航按钮事件
+            backBtn.addEventListener('click', function() {
+                if (currentHistoryIndex > 0) {
+                    currentHistoryIndex--;
+                    browserFrame.src = history[currentHistoryIndex];
+                    urlInput.value = history[currentHistoryIndex];
+                }
+            });
+            
+            forwardBtn.addEventListener('click', function() {
+                if (currentHistoryIndex < history.length - 1) {
+                    currentHistoryIndex++;
+                    browserFrame.src = history[currentHistoryIndex];
+                    urlInput.value = history[currentHistoryIndex];
+                }
+            });
+            
+            refreshBtn.addEventListener('click', function() {
+                browserFrame.src = browserFrame.src;
+            });
+            
+            // iframe加载事件
+            browserFrame.addEventListener('load', function() {
+                loadingIndicator.classList.remove('active');
+                errorMessage.classList.remove('active');
+                browserFrame.style.opacity = '1';
+                
+                // 更新URL输入框
+                try {
+                    if (isSameOrigin(browserFrame.src)) {
+                        urlInput.value = browserFrame.contentWindow.location.href;
+                    }
+                } catch (e) {
+                    // 跨域访问会抛出异常，忽略
+                }
+            });
+            
+            browserFrame.addEventListener('error', function() {
+                loadingIndicator.classList.remove('active');
+                errorMessage.classList.add('active');
+            });
+            
+            // 处理API URL函数
+            function processApiUrl() {
+                const userUrl = apiUrlInput.value.trim();
+                
+                if (!userUrl) {
+                    alert('请输入视频链接');
+                    return;
+                }
+                
+                if (!isValidUrl(userUrl)) {
+                    alert('请输入有效的网址（包含http://或https://）');
+                    return;
+                }
+                
+                // 构建完整URL
+                const fullUrl = API_BASE_URLS[currentApi] + encodeURIComponent(userUrl);
+                
+                // 显示结果
+                resultContent.textContent = fullUrl;
+            }
+            
+            // 导航函数
+            function navigateTo(url) {
+                // 验证URL格式
+                if (!isValidUrl(url)) {
+                    alert('请输入有效的网址（包含http://或https://）');
+                    return;
+                }
+                
+                // 添加http://前缀（如果缺失）
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                
+                // 显示加载指示器
+                loadingIndicator.classList.add('active');
+                errorMessage.classList.remove('active');
+                browserFrame.style.opacity = '0.5';
+                
+                // 更新iframe的src
+                browserFrame.src = url;
+                
+                // 添加到历史记录
+                history.push(url);
+                currentHistoryIndex = history.length - 1;
+                
+                // 更新URL输入框
+                urlInput.value = url;
+            }
+            
+            // 辅助函数：验证URL格式
+            function isValidUrl(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    // 检查是否缺少协议
+                    try {
+                        new URL('https://' + string);
+                        return true;
+                    } catch (_) {
+                        return false;
+                    }
+                }
+            }
+            
+            // 检查是否同源
+            function isSameOrigin(url) {
+                try {
+                    const frameUrl = new URL(url);
+                    const currentUrl = new URL(window.location.href);
+                    return frameUrl.hostname === currentUrl.hostname && frameUrl.port === currentUrl.port;
+                } catch (e) {
+                    return false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
